@@ -1,0 +1,125 @@
+==================================================================
+        PONGZ  -  BlueStacks Multi-Instance Test Kit
+                  Setup & Usage Guide
+==================================================================
+
+This kit lets you run MANY BlueStacks instances of Pongz at once
+(portrait + landscape), install a build to all of them in one click,
+and auto-arrange the windows small and tidy.
+
+Everything is inside this one folder - it is portable. Copy the whole
+"PongzBlueStackTools" folder anywhere on your PC and it works.
+
+
+------------------------------------------------------------------
+ WHAT YOU NEED (one time)
+------------------------------------------------------------------
+ 1. Windows 10/11 PC.
+ 2. BlueStacks 5 installed (the normal free version from
+    https://www.bluestacks.com ). Default install location is fine.
+ 3. This folder copied onto the PC (e.g. to your Desktop or D: drive).
+
+ (You do NOT need Unity, Android Studio, or adb - a working adb is
+  already bundled inside this folder under \platform-tools\.)
+
+
+------------------------------------------------------------------
+ FIRST-TIME SETUP  (do these 3 steps once)
+------------------------------------------------------------------
+
+ STEP 1 - Create your instances
+   - Open "Multi-Instance Manager" (BlueStacks installs a shortcut
+     for it, or open it from inside BlueStacks).
+   - Create as many instances as you want to test with.
+       * For PORTRAIT players  -> set the instance display to Portrait
+         (e.g. 1080 x 1920) when creating it.
+       * For LANDSCAPE players -> Landscape (e.g. 1600 x 900).
+   - Tip: use FRESH instances (not clones) so each looks like a
+     different device/player for matchmaking.
+
+ STEP 2 - Turn on ADB  (needed so builds can be installed)
+   - Double-click:   1-Enable-ADB-FirstTime.bat
+   - It will close BlueStacks, enable ADB, and back up your settings.
+   - That's it - you only do this once per PC.
+     (If you ever Reset/Repair or update BlueStacks, run it again.)
+
+ STEP 3 - Put the build in place
+   - Copy the Pongz .apk file into the  "Builds"  folder.
+   - (It must be .apk, not .aab.)
+
+
+------------------------------------------------------------------
+ DAILY USE  (just two buttons)
+------------------------------------------------------------------
+
+ TO START TESTING:
+   Double-click   Launch-All-Instances.bat
+     -> every instance boots, opens Pongz, and the windows are
+        automatically shrunk and tiled neatly on screen.
+
+   (Optional: Launch-Portrait-Only.bat  or  Launch-Landscape-Only.bat
+    if you only want one orientation.)
+
+ TO INSTALL / UPDATE THE BUILD ON ALL INSTANCES:
+   1. Make sure the instances are open and finished booting.
+   2. Put the new .apk in the "Builds" folder.
+   3. Double-click   Install-Build-To-All.bat
+        -> it installs the newest .apk on every running instance.
+           You'll see "X succeeded, 0 failed".
+
+ TO OPEN THE GAME IN ALL INSTANCES (without rebooting them):
+   Double-click   Open-Game-In-All.bat
+     -> launches Pongz on every running instance. Handy after an
+        install, or if you closed the game and want it back.
+
+ IF WINDOWS GET MESSY:
+   Double-click   Arrange-Windows.bat   to re-tile them.
+
+
+------------------------------------------------------------------
+ ALL THE BUTTONS
+------------------------------------------------------------------
+  1-Enable-ADB-FirstTime.bat ... one-time: turn on ADB in BlueStacks
+  Launch-All-Instances.bat ..... open ALL instances (portrait+landscape)
+  Launch-Portrait-Only.bat ..... open only portrait instances
+  Launch-Landscape-Only.bat .... open only landscape instances
+  Install-Build-To-All.bat ..... install newest .apk on all instances
+  Open-Game-In-All.bat ......... launch Pongz on all running instances
+  Arrange-Windows.bat .......... re-tile open windows small + tidy
+  Builds\ ...................... put your .apk here
+
+
+------------------------------------------------------------------
+ ADJUSTING THINGS (optional - open config.ps1 in Notepad)
+------------------------------------------------------------------
+  Window sizes:  PortraitW/PortraitH, LandscapeW/LandscapeH
+  Spacing:       WindowGap, ScreenMargin
+  Stagger:       StartStaggerSeconds (delay between each instance)
+  Auto-tile:     ArrangeWindows = $true / $false
+  Game package:  PackageName (com.pixelstackstudios.pongz)
+
+
+------------------------------------------------------------------
+ TROUBLESHOOTING
+------------------------------------------------------------------
+ "No instances found"
+     -> Create instances in the Multi-Instance Manager first.
+
+ "No .apk found"
+     -> Put an .apk inside the Builds folder.
+
+ Install says "connect error for write: closed" or "0 succeeded"
+     -> ADB is off. Run 1-Enable-ADB-FirstTime.bat, then relaunch
+        the instances and try Install again.
+
+ Install fails / instance not ready
+     -> Wait until the instance is fully booted (Android home screen
+        visible) before running Install.
+
+ A blue "Windows protected your PC" / SmartScreen popup on a .bat
+     -> Click "More info" -> "Run anyway". (These are simple local
+        scripts; Windows just warns about downloaded files.)
+
+ Windows too big / overlapping
+     -> Run Arrange-Windows.bat, or shrink the sizes in config.ps1.
+==================================================================

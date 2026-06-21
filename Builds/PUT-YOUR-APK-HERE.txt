@@ -1,0 +1,8 @@
+Put the Pongz .apk file in THIS folder.
+
+The Install button (Install-Build-To-All.bat) automatically picks the
+NEWEST .apk found here and installs it on every running instance.
+
+Notes:
+ - Must be an .apk  (NOT an .aab - those cannot be installed to an emulator).
+ - You can keep multiple .apk files here; the most recent one is used.
