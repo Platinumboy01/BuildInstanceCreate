@@ -131,23 +131,12 @@ public class PongzLauncher : Form
                 "Pongz Launcher", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             return;
         }
-        try
-        {
-            var psi = new ProcessStartInfo
-            {
-                FileName = "powershell.exe",
-                // -NoExit keeps the window open so the user can read the result.
-                Arguments = "-NoProfile -ExecutionPolicy Bypass -NoExit -File \"" + path + "\" " + args,
-                WorkingDirectory = BaseDir,
-                UseShellExecute = true
-            };
-            Process.Start(psi);
-        }
-        catch (Exception ex)
-        {
-            MessageBox.Show("Could not run script:\n" + ex.Message,
-                "Pongz Launcher", MessageBoxButtons.OK, MessageBoxIcon.Error);
-        }
+        // Open an in-app output window and stream the script's progress
+        // into it - no more black PowerShell console.
+        var win = new OutputForm(scriptName, BaseDir);
+        win.Icon = this.Icon;
+        win.Show(this);
+        win.Run(path, args);
     }
 
     void ShowGuide()
@@ -220,5 +209,163 @@ public class PongzLauncher : Form
         dlg.Controls.Add(box);
         dlg.Controls.Add(open);
         dlg.ShowDialog(this);
+    }
+}
+
+// ============================================================
+//  OutputForm - runs a .ps1 hidden and streams its output into
+//  a dark in-app window instead of a black PowerShell console.
+// ============================================================
+public class OutputForm : Form
+{
+    readonly string _baseDir;
+    RichTextBox _box;
+    Label _status;
+    Button _closeBtn;
+    Process _proc;
+    bool _running;
+
+    public OutputForm(string scriptName, string baseDir)
+    {
+        _baseDir = baseDir;
+
+        Text = "Pongz  -  " + scriptName;
+        ClientSize = new Size(700, 460);
+        StartPosition = FormStartPosition.CenterScreen;
+        BackColor = Color.FromArgb(24, 27, 32);
+        Font = new Font("Segoe UI", 9.5f);
+        MinimumSize = new Size(480, 300);
+
+        _box = new RichTextBox
+        {
+            ReadOnly = true,
+            BackColor = Color.FromArgb(18, 20, 24),
+            ForeColor = Color.FromArgb(220, 224, 230),
+            BorderStyle = BorderStyle.None,
+            Font = new Font("Consolas", 9.5f),
+            Location = new Point(10, 10),
+            Size = new Size(ClientSize.Width - 20, ClientSize.Height - 64),
+            Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom,
+            DetectUrls = false,
+            WordWrap = false,
+            ScrollBars = RichTextBoxScrollBars.Both
+        };
+
+        _status = new Label
+        {
+            Text = "Running...",
+            ForeColor = Color.FromArgb(180, 186, 195),
+            AutoSize = false, TextAlign = ContentAlignment.MiddleLeft,
+            Location = new Point(12, ClientSize.Height - 42),
+            Size = new Size(ClientSize.Width - 140, 30),
+            Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right
+        };
+
+        _closeBtn = new Button
+        {
+            Text = "Close", ForeColor = Color.White,
+            BackColor = Color.FromArgb(80, 84, 92), FlatStyle = FlatStyle.Flat,
+            Location = new Point(ClientSize.Width - 110, ClientSize.Height - 44),
+            Size = new Size(100, 32), Cursor = Cursors.Hand,
+            Anchor = AnchorStyles.Bottom | AnchorStyles.Right
+        };
+        _closeBtn.FlatAppearance.BorderSize = 0;
+        _closeBtn.Click += (s, e) => Close();
+
+        Controls.Add(_box);
+        Controls.Add(_status);
+        Controls.Add(_closeBtn);
+
+        FormClosing += (s, e) =>
+        {
+            // If the script is still going, ask before killing it.
+            if (_running && _proc != null && !_proc.HasExited)
+            {
+                var r = MessageBox.Show("This task is still running. Stop it and close?",
+                    "Pongz", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                if (r != DialogResult.Yes) { e.Cancel = true; return; }
+                try { _proc.Kill(); } catch { }
+            }
+        };
+    }
+
+    public void Run(string path, string args)
+    {
+        try
+        {
+            var psi = new ProcessStartInfo
+            {
+                FileName = "powershell.exe",
+                Arguments = "-NoProfile -ExecutionPolicy Bypass -File \"" + path + "\" " + args,
+                WorkingDirectory = _baseDir,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                StandardOutputEncoding = System.Text.Encoding.UTF8,
+                StandardErrorEncoding = System.Text.Encoding.UTF8
+            };
+            _proc = new Process { StartInfo = psi, EnableRaisingEvents = true };
+            _proc.OutputDataReceived += (s, e) => Append(e.Data, false);
+            _proc.ErrorDataReceived  += (s, e) => Append(e.Data, true);
+            _proc.Exited += (s, e) => Finished();
+
+            _running = true;
+            _proc.Start();
+            _proc.BeginOutputReadLine();
+            _proc.BeginErrorReadLine();
+        }
+        catch (Exception ex)
+        {
+            Append("Could not start task: " + ex.Message, true);
+            Finished();
+        }
+    }
+
+    void Append(string line, bool isError)
+    {
+        if (line == null) return;              // null = stream closed
+        if (IsDisposed || !IsHandleCreated) return;
+        try
+        {
+            BeginInvoke((Action)(() =>
+            {
+                if (IsDisposed) return;
+                _box.SelectionStart = _box.TextLength;
+                _box.SelectionColor = isError
+                    ? Color.FromArgb(255, 120, 120)
+                    : Color.FromArgb(220, 224, 230);
+                _box.AppendText(line + "\n");
+                _box.SelectionStart = _box.TextLength;
+                _box.ScrollToCaret();
+            }));
+        }
+        catch { /* form closing - ignore */ }
+    }
+
+    void Finished()
+    {
+        if (IsDisposed || !IsHandleCreated) return;
+        try
+        {
+            BeginInvoke((Action)(() =>
+            {
+                if (IsDisposed) return;
+                _running = false;
+                int code = -1;
+                try { code = _proc.ExitCode; } catch { }
+                if (code == 0)
+                {
+                    _status.Text = "Finished.";
+                    _status.ForeColor = Color.FromArgb(90, 200, 120);
+                }
+                else
+                {
+                    _status.Text = "Finished (exit code " + code + ").";
+                    _status.ForeColor = Color.FromArgb(230, 170, 60);
+                }
+            }));
+        }
+        catch { }
     }
 }
