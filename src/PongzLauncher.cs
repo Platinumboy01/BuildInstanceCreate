@@ -28,7 +28,7 @@ public class PongzLauncher : Form
     public PongzLauncher()
     {
         Text = "Pongz  -  BlueStacks Test Kit";
-        ClientSize = new Size(360, 600);
+        ClientSize = new Size(360, 648);
         FormBorderStyle = FormBorderStyle.FixedSingle;   // not resizable
         MaximizeBox = false;
         StartPosition = FormStartPosition.CenterScreen;
@@ -54,6 +54,8 @@ public class PongzLauncher : Form
             (s, e) => RunScript("launch-all.ps1", "landscape"), y);
         y = AddButton("Launch  ALL  instances", Color.FromArgb(60, 90, 160),
             (s, e) => RunScript("launch-all.ps1", "all"), y);
+        y = AddButton("Close  ALL  instances", Color.FromArgb(200, 65, 65),
+            (s, e) => RunScript("close-all.ps1", ""), y);
 
         y = AddSection("Build / Game", y);
         y = AddButton("Install Build to ALL", Color.FromArgb(40, 160, 90),
