@@ -17,6 +17,9 @@ public class PongzLauncher : Form
     // Folder the .exe is run from = the toolkit folder (portable).
     static readonly string BaseDir = AppDomain.CurrentDomain.BaseDirectory;
 
+    // How many instances to launch (0 = all). Set by the count box.
+    NumericUpDown _count;
+
     [STAThread]
     public static void Main()
     {
@@ -28,7 +31,7 @@ public class PongzLauncher : Form
     public PongzLauncher()
     {
         Text = "Pongz  -  BlueStacks Test Kit";
-        ClientSize = new Size(360, 648);
+        ClientSize = new Size(360, 692);
         FormBorderStyle = FormBorderStyle.FixedSingle;   // not resizable
         MaximizeBox = false;
         StartPosition = FormStartPosition.CenterScreen;
@@ -47,13 +50,15 @@ public class PongzLauncher : Form
 
         y = AddHeader("PONGZ", "BlueStacks Multi-Instance Test Kit", y);
 
+        y = AddCountRow(y);
+
         y = AddSection("Launch", y);
         y = AddButton("Launch  Portrait  instances", Color.FromArgb(45, 120, 220),
-            (s, e) => RunScript("launch-all.ps1", "portrait"), y);
+            (s, e) => RunScript("launch-all.ps1", LaunchArgs("portrait")), y);
         y = AddButton("Launch  Landscape  instances", Color.FromArgb(45, 120, 220),
-            (s, e) => RunScript("launch-all.ps1", "landscape"), y);
+            (s, e) => RunScript("launch-all.ps1", LaunchArgs("landscape")), y);
         y = AddButton("Launch  ALL  instances", Color.FromArgb(60, 90, 160),
-            (s, e) => RunScript("launch-all.ps1", "all"), y);
+            (s, e) => RunScript("launch-all.ps1", LaunchArgs("all")), y);
         y = AddButton("Close  ALL  instances", Color.FromArgb(200, 65, 65),
             (s, e) => RunScript("close-all.ps1", ""), y);
 
@@ -70,6 +75,8 @@ public class PongzLauncher : Form
         y = AddSection("Setup", y);
         y = AddButton("Enable ADB  (first time only)", Color.FromArgb(180, 120, 40),
             (s, e) => RunScript("enable-adb.ps1", ""), y);
+        y = AddButton("Show Home screen on boot (not Store)", Color.FromArgb(180, 120, 40),
+            (s, e) => RunScript("set-home-on-boot.ps1", "home"), y);
         y = AddButton("Setup Guide  (how to use)", Color.FromArgb(80, 84, 92),
             (s, e) => ShowGuide(), y);
     }
@@ -91,6 +98,33 @@ public class PongzLauncher : Form
         };
         Controls.Add(t); Controls.Add(s);
         return y + 64;
+    }
+
+    int AddCountRow(int y)
+    {
+        var l = new Label {
+            Text = "Launch how many?   (0 = all)", ForeColor = Color.FromArgb(210, 215, 222),
+            AutoSize = false, TextAlign = ContentAlignment.MiddleLeft,
+            Location = new Point(20, y + 4), Size = new Size(210, 26)
+        };
+        _count = new NumericUpDown {
+            Minimum = 0, Maximum = 99, Value = 0,
+            Location = new Point(ClientSize.Width - 92, y),
+            Size = new Size(72, 26),
+            BackColor = Color.FromArgb(24, 27, 32), ForeColor = Color.White,
+            BorderStyle = BorderStyle.FixedSingle, TextAlign = HorizontalAlignment.Center,
+            Font = new Font("Segoe UI", 11f, FontStyle.Bold)
+        };
+        Controls.Add(l);
+        Controls.Add(_count);
+        return y + 38;
+    }
+
+    // Build the args for launch-all.ps1, honoring the count box.
+    string LaunchArgs(string only)
+    {
+        int n = (int)_count.Value;   // 0 = no limit
+        return "-Only " + only + " -Count " + n;
     }
 
     int AddSection(string label, int y)

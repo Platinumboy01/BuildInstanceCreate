@@ -3,11 +3,13 @@
 #  Reads instance list + orientation from bluestacks.conf.
 #
 #  Usage:
-#    launch-all.ps1              -> launches ALL (portrait + landscape)
-#    launch-all.ps1 portrait     -> only Portrait instances
-#    launch-all.ps1 landscape    -> only Landscape instances
+#    launch-all.ps1                       -> launches ALL (portrait + landscape)
+#    launch-all.ps1 portrait              -> only Portrait instances
+#    launch-all.ps1 landscape             -> only Landscape instances
+#    launch-all.ps1 -Only all -Count 4    -> only the first 4 instances
+#    (Count 0 = no limit / launch all of the selected orientation)
 # ============================================================
-param([string]$Only = "all")
+param([string]$Only = "all", [int]$Count = 0)
 . (Join-Path $PSScriptRoot "config.ps1")
 
 Write-Host "=== Pongz : Launch BlueStacks instances ===" -ForegroundColor Cyan
@@ -31,6 +33,12 @@ elseif ($filter -eq "landscape") { $instances = $instances | Where-Object { $_.O
 if ($instances.Count -eq 0) {
     Write-Host "No '$filter' instances found." -ForegroundColor Yellow
     return
+}
+
+# Limit to the first N if a count was requested (0 = launch all).
+if ($Count -gt 0 -and $instances.Count -gt $Count) {
+    Write-Host ("Limiting to the first {0} of {1} instance(s)." -f $Count, $instances.Count) -ForegroundColor DarkGray
+    $instances = $instances | Select-Object -First $Count
 }
 
 $nP = ($instances | Where-Object { $_.Orientation -eq "Portrait" }).Count
