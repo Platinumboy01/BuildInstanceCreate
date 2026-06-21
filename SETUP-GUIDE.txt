@@ -49,6 +49,29 @@ Everything is inside this one folder - it is portable. Copy the whole
 
 
 ------------------------------------------------------------------
+ EASIEST WAY - THE APP  (Pongz-Launcher.exe)
+------------------------------------------------------------------
+   Instead of opening .bat files in this folder, just double-click
+
+       Pongz-Launcher.exe
+
+   A small window opens with buttons for everything:
+     - Launch Portrait / Landscape / ALL instances
+     - Install Build to ALL
+     - Open App on all instances
+     - Arrange / Tile windows
+     - Enable ADB (first time)
+     - Setup Guide
+
+   The .exe simply runs the same scripts described below, so any
+   tweaks you make in config.ps1 still apply.
+
+   (If Pongz-Launcher.exe is missing, double-click Build-Launcher.bat
+    once to create it - it uses Windows' built-in compiler, no
+    installs needed. The source is in src\PongzLauncher.cs.)
+
+
+------------------------------------------------------------------
  DAILY USE  (just two buttons)
 ------------------------------------------------------------------
 
